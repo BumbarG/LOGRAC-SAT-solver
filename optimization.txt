@@ -1,0 +1,6 @@
+OPTIMIZACIJA: 
+
+Omejitev vejitve porgrama:
+- Izbiro spremenljivk iz nakjkrajših členov, pridobimo čim več unit clauses (da omejimo nove izbire).
+
+- Shranjevanje podatkov (dolžina člena) ob posodabljanju celotenga stavka.  
