@@ -2,6 +2,7 @@ import numpy as np
 import sys
 from collections import defaultdict
 import random
+from copy import deepcopy
 
 # class Literal:
 #     def __init__(self, identifier, negation):
@@ -98,6 +99,7 @@ class Sentence:
         ####
         ### Drop clauses with observed literal
         ####
+        
         for clause_idx in self.literal_to_clause_dict[literal]:
             
             # If we have multiple occurances of {literal} unit_clause
@@ -106,12 +108,6 @@ class Sentence:
                     self.unit_clauses.remove(clause_idx)
                 except:
                     pass
-            ###
-            #  Teting error. Put out later!!!
-            try: 
-                self.clause_dict[clause_idx].remove_literal(literal)  
-            except:
-                print("Napaka 1")
 
             # Removing indexes of observed clause from literal_to_clause_dict
             literals = self.clause_dict[clause_idx].literals
@@ -123,11 +119,9 @@ class Sentence:
                     
                     # For all other literals in clause update literal_to_clause_dict (remove clause index)
                     
-                    try: # this try catch shouldnt exist in the final version.
-                        self.literal_to_clause_dict[l].remove(clause_idx)
-                    except:
-                        print("Napaka 2")
-                        pass
+                    
+                    self.literal_to_clause_dict[l].remove(clause_idx)
+                 
 
                     # If literal does not exist in any clause, clean literal_to_clause
                     if len(self.literal_to_clause_dict[l]) == 0:
@@ -146,10 +140,7 @@ class Sentence:
         ####
         
         for clause_idx in self.literal_to_clause_dict[-literal]:
-            try:
-                self.clause_dict[clause_idx].remove_literal(-literal)
-            except:
-                pass
+            self.clause_dict[clause_idx].remove_literal(-literal)
             if self.clause_dict[clause_idx].is_unit():
                 self.unit_clauses.add(clause_idx)
             if self.clause_dict[clause_idx].is_empty():
@@ -162,14 +153,14 @@ class Sentence:
     def add_and_copy(self, literal):
         # changes happen with clause dict, unit_clauses, literal_to_clause_dict and literal_occurence_count_dict
         
-        new_clause_dict = self.clause_dict.copy()
+        new_clause_dict = deepcopy(self.clause_dict) # .deepcopy()
         new_clause_dict[0] = Clause([literal])  # Credit for idea goes to Špela (XD) 0 is reserved for the adding literal
         new_unit_clauses = {0}
 
-        new_literal_to_clause_dict = self.literal_to_clause_dict.copy()
+        new_literal_to_clause_dict = deepcopy(self.literal_to_clause_dict) # .deepcopy()
         new_literal_to_clause_dict[literal].append(0)
         
-        new_literal_occurence_count_dict = self.literal_occurence_count_dict.copy()
+        new_literal_occurence_count_dict = deepcopy(self.literal_occurence_count_dict) # .deepcopy()
         new_literal_occurence_count_dict[literal] = new_literal_occurence_count_dict[literal] + 1
 
         return Sentence(new_clause_dict, self.pure_literals , new_literal_occurence_count_dict, new_unit_clauses, new_literal_to_clause_dict)
@@ -209,7 +200,7 @@ def load_dimacs(filepath):
                 curr_clause_index = curr_clause_index + 1  
     
     # We create a copy of the count to ensure that the defaultdict does not change during the iteration
-    literal_status_count_copy = literal_status_count.copy()       
+    literal_status_count_copy = deepcopy(literal_status_count) # .deepcopy()       
     pure_literals = set([k for k, _ in literal_status_count.items() if literal_status_count_copy[-k] == 0]) # We count find all pure literals 
     
     # NOTE: the idea is to maintain the constructed structures within the Sentence class during runtime and across the recursive calls.
@@ -239,10 +230,10 @@ def sat(sentence: Sentence):
     # Step 2 : Stopping criterium check
     solution = [] # We initialize an empty solution.
     tmp_literal = None # initialize the tmp literal we are using during the simplify step.
-
+    
     #print('Smo v whilu', len(sentence.pure_literals), len(sentence.unit_clauses))
     while (len(sentence.pure_literals)!=0) or (len(sentence.unit_clauses) != 0):
-        print('Smo v whilu', len(sentence.pure_literals), len(sentence.unit_clauses))
+        #print('Ostržek in whale (in While)', len(sentence.pure_literals), len(sentence.unit_clauses))
         # Unit clauses
         while len(sentence.unit_clauses) != 0: # We simplify our Sentence by each literal in our list of unit clauses.
             tmp_clause_idx = sentence.unit_clauses.pop() # We choose a random unit clause (its id) from our set of unit clauses (pop removes also removes it from the set) credit goes to Gal XD 
@@ -252,7 +243,7 @@ def sat(sentence: Sentence):
             if not success: # if simplify function was not successful we were not able to find the solution.
                 return 0
             if len(sentence.clause_dict) == 0:
-                return list(set(solution)) # This should be improved after the code starts working.
+                return list(set(solution)) # This should be improved after the code starts working. TODO
 
         ### At this point and after, we do not have any unit clauses  unit_clauses = set()
 
@@ -264,11 +255,11 @@ def sat(sentence: Sentence):
             if not success: # if simplify function was not successful we were not able to find the solution.
                 return 0
             if len(sentence.clause_dict) == 0:
-                return list(set(solution)) # this should be improved after the code starts working
+                return list(set(solution)) # this should be improved after the code starts working TODO
 
-    print("Gremo mi po svoje (Rekurzija)")
+    # print("Gremo mi po svoje (Rekurzija)")
     # Step 3 - Recursion and backtracing
-    for candidate_literal in sentence.literal_to_clause_dict.keys(): # Here we should do further optimization.
+    for candidate_literal in sentence.literal_to_clause_dict.keys(): # Here we should do further optimization. TODO
         branch_solution = sat(sentence.add_and_copy(candidate_literal))
         # If we have valid sollution than we break out of loop = out of search in further branches
         if branch_solution != 0:
@@ -277,16 +268,12 @@ def sat(sentence: Sentence):
     if branch_solution == 0: # No solution was found.
         return 0
 
-    return list(set(solution + branch_solution))
+    return list(set(solution + branch_solution)) # TODO
 
 if __name__ == '__main__':
-    #cnf = load_dimacs(sys.argv[1])
-    cnf = load_dimacs('Homework Files-20200320/sudoku_hard.txt')
-    #print(cnf.clause_dict[276])
-    #print("sentence arg: ", cnf)
+    
+    cnf = load_dimacs(sys.argv[1])
     solution = sat(cnf)
-    #name = sys.argv[1].split('/')[-1].split('.')[0]
-    
-    
-    print("Rešitev: " + str(solution))
-    #write_solution(solution, name)
+    name = sys.argv[1].split('/')[-1].split('.')[0]
+    #print("Rešitev: " + str(solution))
+    write_solution(solution, name)
