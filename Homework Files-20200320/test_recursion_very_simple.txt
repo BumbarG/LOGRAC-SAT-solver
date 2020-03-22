@@ -1,7 +1,7 @@
 c Another 9*9 Sudoku puzzle, this time at 'very easy' level
 c Atom pxyn is represented by 81*(x-1)+9*(y-1)+n
-c first step: p & q r & r -z & z -p -r & -r p q (p unit, q pure)
-c second step: q r & r -z & z -r (q pure)
+c first step: r & -r p q & -r s & -r q o (p unit, s pure)
+c second step: 
 c third step: r -z & -r z (random choice) (zberemo r)
 c fourth step: z (z unit)
 c fifth step: [] (win) 
