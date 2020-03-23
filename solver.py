@@ -3,6 +3,7 @@ import sys
 from collections import defaultdict
 import random
 from copy import deepcopy
+import time
 
 # class Literal:
 #     def __init__(self, identifier, negation):
@@ -257,7 +258,7 @@ def sat(sentence: Sentence):
             if len(sentence.clause_dict) == 0:
                 return list(set(solution)) # this should be improved after the code starts working TODO
 
-    # print("Gremo mi po svoje (Rekurzija)")
+    print("Gremo mi po svoje (Rekurzija)")
     # Step 3 - Recursion and backtracing
     for candidate_literal in sentence.literal_to_clause_dict.keys(): # Here we should do further optimization. TODO
         branch_solution = sat(sentence.add_and_copy(candidate_literal))
@@ -273,7 +274,10 @@ def sat(sentence: Sentence):
 if __name__ == '__main__':
     
     cnf = load_dimacs(sys.argv[1])
+    zac = time.time()
     solution = sat(cnf)
+    kon = time.time()
+    print(kon-zac)
     name = sys.argv[1].split('/')[-1].split('.')[0]
     #print("Rešitev: " + str(solution))
     write_solution(solution, name)
