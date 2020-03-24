@@ -218,7 +218,8 @@ def write_solution(solution, name):
     """
     Function writes the solution to ze file
     """
-    output = open("Homework Files-20200320/Our_solutions/"+name+"_our_solution.txt", "w")
+    # output = open("Homework Files-20200320/Our_solutions/"+name+"_our_solution.txt", "w")
+    output = open(name, "w")
     out = str(solution)
     out = out.replace(',', '')
     out = out.replace('[', '')
@@ -255,12 +256,13 @@ def rdlcs_heuristic(sentence):
     return sorted(output, key=lambda x: (x[1], random.random()), reverse=True)
 
 
-def sat(sentence: Sentence):
+def sat(sentence: Sentence, heuristic_cand = 'Jaro'):
     """
     Function hopefully solves the SAT problem
     sentence ... Sentence(clause_dict=clause_dict, pure_literals=pure_literals,
                    unit_clauses = unit_clauses, literal_to_clause_dict=literal_to_clause_dict, 
                    literal_occurence_count_dict = literal_occurence_count_dict)
+    heuristic_cand ... the heuristics used for choosing candidate literal. Possible options: 'Jaro', 'RDLCS', 'First in list'
     """
     # Step 1 : Unit clauses and pure literals
     # Step 2 : Stopping criterium check
@@ -268,7 +270,7 @@ def sat(sentence: Sentence):
     tmp_literal = None # initialize the tmp literal we are using during the simplify step.
     
     #print('Smo v whilu', len(sentence.pure_literals), len(sentence.unit_clauses))
-    while (len(sentence.pure_literals)!=0) or (len(sentence.unit_clauses) != 0):
+    while (len(sentence.pure_literals) !=0 ) or (len(sentence.unit_clauses) != 0):
         #print('Ostržek in whale (in While)', len(sentence.pure_literals), len(sentence.unit_clauses))
         # Unit clauses
         while len(sentence.unit_clauses) != 0: # We simplify our Sentence by each literal in our list of unit clauses.
@@ -284,7 +286,7 @@ def sat(sentence: Sentence):
         ### At this point and after, we do not have any unit clauses  unit_clauses = set()
 
         # Check for pure literals
-        while (len(sentence.pure_literals) != 0) and (len(sentence.unit_clauses) == 0):
+        while (len(sentence.pure_literals) != 0) and (len(sentence.unit_clauses) == 0): # not {}
             tmp_literal = sentence.pure_literals.pop() # we chose a random pure literal (signed int) from our set of pure literals (pop removes also removes it from the set)
             success = sentence.simplify(tmp_literal) # Simplify the expression by the literal (signed int). Returns False if this causes an empty clause.
             solution.append(tmp_literal) # We add the literal (signed int) to the solution.
@@ -295,24 +297,40 @@ def sat(sentence: Sentence):
 
     #print("Gremo mi po svoje (Rekurzija)")
     # Step 3 - Recursion and backtracing
-    
-    # Jaroslaw Wong heuristic.
-    improved_tuple_list = jaro_wang_heuristic(sentence)
-    # DLCS heuristic.
-    #improved_tuple_list = rdlcs_heuristic(sentence)
+
+    # Heuristics    
+    # Jaroslaw Wong heuristic, RDLCS heuristics, no heuriscitc (first in dictionary)
+    if heuristic_cand == 'Jaro':
+        improved_tuple_list = jaro_wang_heuristic(sentence) ###  IN TESTED CASES THE JARO WANG HEURISTIC WORKED BETTER
+        candidate_literal, _ = improved_tuple_list[0] 
+   
+    elif heuristic_cand == 'RDLCS':
+        improved_tuple_list = rdlcs_heuristic(sentence) 
+        candidate_literal, _ = improved_tuple_list[0] 
+   
+    elif heuristic_cand == 'First in list':
+        candidate_literal = random.choice(list(sentence.literal_to_clause_dict.keys()))
+   
+    else:
+        print('Nauči se tipkati Jaro en')
+        return 9000
+        
     # print(len(improved_tuple_list))
     # print(improved_tuple_list)
 
-    candidate_literal, _ = improved_tuple_list[0] # Here we should do further optimization. TODO
-    # candidate_literal = random.choice(list(sentence.literal_to_clause_dict.keys()))
-    branch_solution_positive = sat(sentence.add_and_copy(candidate_literal))
-    branch_solution_negative = sat(sentence.add_and_copy(-candidate_literal))
     
-    # If we have valid sollution than we break out of loop = out of search in further branches
+    candidate_literal = random.choice([-1, 1])*candidate_literal
+    # 
+    branch_solution_positive = sat(sentence.add_and_copy(candidate_literal))
 
     if branch_solution_positive != 0:
         return (solution + branch_solution_positive)
 
+    branch_solution_negative = sat(sentence.add_and_copy(-candidate_literal))
+    
+    # If we have valid sollution than we break out of loop = out of search in further branches
+
+    
     if branch_solution_negative != 0:
         return (solution + branch_solution_negative)
 
@@ -325,19 +343,21 @@ def sat(sentence: Sentence):
 
 
 if __name__ == '__main__':
-    
-    #cnf = load_dimacs(sys.argv[1])
-    
-    for i in range(100000):
-        cnf = load_dimacs("Homework Files-20200320/test.txt")
-        zac = time.time()
-        solution = sat(cnf)
-        kon = time.time()
-        print(kon-zac)
-    #print("Rešitev: " + str(solution))
-    #print(set(solution))
-    #print("dolzina s set: " + len(set(solution)))
-    #print("dolzina z tab: " + len(solution))
-
+    avg = 0
+    cnf = load_dimacs(sys.argv[1])
+    solution = sat(cnf, 'Jaro')
     #name = sys.argv[1].split('/')[-1].split('.')[0]
-    #write_solution(solution, name)
+    write_solution(solution, sys.argv[2])
+    print("Rešitev: " + str(solution))
+
+    #repetitions = 30
+    #for i in range(repetitions):
+    #    #cnf = load_dimacs("Homework Files-20200320/test.txt")
+    #    zac = time.time()
+    #    solution = sat(cnf, 'Jaro')
+    #    kon = time.time()
+    #    avg = avg + kon-zac
+    #    print(kon-zac)
+    #print("     avg: ", avg/repetitions)
+    
+
