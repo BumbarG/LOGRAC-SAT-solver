@@ -7,3 +7,5 @@ Omejitev vejitve porgrama:
 
 
 Izbira unit clausov (izberemo tiste, ki se večkrat pojavljajo v sentencu)
+
+- 2 watched literals (takoj ko odstranimo en literal iz clausa dolžine 2 postane drugi unit)
