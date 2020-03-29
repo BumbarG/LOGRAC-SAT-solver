@@ -121,9 +121,13 @@ class Sentence:
                     self.literal_to_clause_dict[l].remove(clause_idx)
                  
                     # If literal does not exist in any clause, clean literal_to_clause
-                    if self.literal_to_clause_dict[l] is []:
+                    if len(self.literal_to_clause_dict[l]) == 0:
                         self.literal_to_clause_dict.pop(l)
                         self.literal_occurence_count_dict.pop(l)
+                        try:
+                            self.pure_literals.remove(l)
+                        except:
+                            pass
 
             
             self.clause_dict.pop(clause_idx)
@@ -145,7 +149,6 @@ class Sentence:
             if self.clause_dict[clause_idx].is_empty():
                 return False
         try:
-            
             self.literal_occurence_count_dict.pop(-literal)
         except:
             # print(self.literal_to_clause_dict[-literal])
@@ -169,7 +172,8 @@ class Sentence:
         new_literal_occurence_count_dict = deepcopy(self.literal_occurence_count_dict) # .deepcopy()
         new_literal_occurence_count_dict[literal] = new_literal_occurence_count_dict[literal] + 1
 
-        return Sentence(new_clause_dict, set(), new_literal_occurence_count_dict, new_unit_clauses, new_literal_to_clause_dict)
+        return Sentence(clause_dict = new_clause_dict, pure_literals = set(), literal_occurence_count_dict = new_literal_occurence_count_dict,
+                         unit_clauses = new_unit_clauses, literal_to_clause_dict = new_literal_to_clause_dict)
 
     def __repr__(self):
         return "{}\n{}\n{}\n{}\n".format(str(self.clause_dict), str(self.literal_to_clause_dict), str(self.unit_clauses), str(self.pure_literals))
@@ -274,8 +278,28 @@ def sat(sentence: Sentence, heuristic_cand = 'Jaro'):
         #print('Ostržek in whale (in While)', len(sentence.pure_literals), len(sentence.unit_clauses))
         # Unit clauses
         while len(sentence.unit_clauses) != 0: # We simplify our Sentence by each literal in our list of unit clauses.
-            tmp_clause_idx = sentence.unit_clauses.pop() # We choose a random unit clause (its id) from our set of unit clauses (pop removes also removes it from the set) credit goes to Gal XD 
-            tmp_literal = next(iter(sentence.clause_dict[tmp_clause_idx].literals)) # We retrieve the literal (signed int) corresponding the above clause.
+            #tmp_clause_idx = sentence.unit_clauses.pop() # We choose a random unit clause (its id) from our set of unit clauses (pop removes also removes it from the set) credit goes to Gal XD 
+            #tmp_literal = next(iter(sentence.clause_dict[tmp_clause_idx].literals)) # We retrieve the literal (signed int) corresponding the above clause.
+            
+
+
+            ####IDEA IS THAT WE FIRST TAKE A LOOK AT THE UNIT CLAUSES THAT HAVE HIGH OCCURENCY
+            ##Unit choice optimization
+            literali = []
+            _max = 0
+            tmp_literal = None
+            tmp_clause_to_remove = None
+            for tmp_clause_idx in sentence.unit_clauses:
+                literal = next(iter(sentence.clause_dict[tmp_clause_idx].literals))
+                if _max < sentence.literal_occurence_count_dict[literal]:
+                    _max = sentence.literal_occurence_count_dict[literal]
+                    tmp_literal=literal
+                    tmp_clause_to_remove = tmp_clause_idx
+            ## Unit choice optimization
+
+            sentence.unit_clauses.remove(tmp_clause_to_remove)
+            #tmp_clause_idx = sentence.unit_clauses.pop() # We choose a random unit clause (its id) from our set of unit clauses (pop removes also removes it from the set) credit goes to Gal XD 
+            #tmp_literal = next(iter(sentence.clause_dict[tmp_clause_idx].literals))
             success = sentence.simplify(tmp_literal) # Simplify the expression by the literal (signed int). Returns False if this causes an empty clause.
             solution.append(tmp_literal) # We add the literal (signed int) to the solution.
             if not success: # if simplify function was not successful we were not able to find the solution.
@@ -287,7 +311,22 @@ def sat(sentence: Sentence, heuristic_cand = 'Jaro'):
 
         # Check for pure literals
         while (len(sentence.pure_literals) != 0) and (len(sentence.unit_clauses) == 0): # not {}
-            tmp_literal = sentence.pure_literals.pop() # we chose a random pure literal (signed int) from our set of pure literals (pop removes also removes it from the set)
+
+            ##Unit choice optimization
+            tmp_literal = None
+            _max = 0 
+            for literal in sentence.pure_literals:
+                #print(_max, sentence.pure_literals, tmp_literal)
+                if _max < sentence.literal_occurence_count_dict[literal]:
+                    _max = sentence.literal_occurence_count_dict[literal]
+                    tmp_literal=literal
+            ## Unit choice optimization
+            if tmp_literal is None:
+                print('Oprostite, kaj za vraga?')
+            sentence.pure_literals.remove(tmp_literal)
+            ## Unit choice optimization
+
+            #tmp_literal = sentence.pure_literals.pop() # we chose a random pure literal (signed int) from our set of pure literals (pop removes also removes it from the set)
             success = sentence.simplify(tmp_literal) # Simplify the expression by the literal (signed int). Returns False if this causes an empty clause.
             solution.append(tmp_literal) # We add the literal (signed int) to the solution.
             if not success: # if simplify function was not successful we were not able to find the solution.
@@ -317,18 +356,16 @@ def sat(sentence: Sentence, heuristic_cand = 'Jaro'):
         
     # print(len(improved_tuple_list))
     # print(improved_tuple_list)
-
     
     candidate_literal = random.choice([-1, 1])*candidate_literal
-    # 
-    branch_solution_positive = sat(sentence.add_and_copy(candidate_literal))
 
+    branch_solution_positive = sat(sentence.add_and_copy(candidate_literal))
     if branch_solution_positive != 0:
         return (solution + branch_solution_positive)
 
     branch_solution_negative = sat(sentence.add_and_copy(-candidate_literal))
     
-    # If we have valid sollution than we break out of loop = out of search in further branches
+    # If we have valid solution than we break out of loop = out of search in further branches
 
     
     if branch_solution_negative != 0:
@@ -344,20 +381,20 @@ def sat(sentence: Sentence, heuristic_cand = 'Jaro'):
 
 if __name__ == '__main__':
     avg = 0
-    cnf = load_dimacs(sys.argv[1])
+    #cnf = load_dimacs(sys.argv[1])
+    cnf = load_dimacs("Samples/Sample1.txt")
+    zac = time.time()
     solution = sat(cnf, 'Jaro')
+    kon = time.time()
     #name = sys.argv[1].split('/')[-1].split('.')[0]
-    write_solution(solution, sys.argv[2])
-    print("Rešitev: " + str(solution))
-
+    #write_solution(solution, sys.argv[2])
+    print("Rešitev: " + str(solution) + "\n" + "v času: " + str(kon - zac))
+    print(len(solution))
     #repetitions = 30
     #for i in range(repetitions):
     #    #cnf = load_dimacs("Homework Files-20200320/test.txt")
     #    zac = time.time()
     #    solution = sat(cnf, 'Jaro')
-    #    kon = time.time()
-    #    avg = avg + kon-zac
+    #    kon = time.time()za    #    avg = avg + kon-zac
     #    print(kon-zac)
-    #print("     avg: ", avg/repetitions)
     
-

@@ -1,9 +1,4 @@
 c
-c    horn? no 
-c    forced? no 
-c    mixed sat? no 
-c    clause length = 3 
-c
 p cnf 200  860 
  150 137 -111 0
 172 140 93 0

@@ -145,11 +145,8 @@ class Sentence:
             if self.clause_dict[clause_idx].is_empty():
                 return False
         try:
-            
             self.literal_occurence_count_dict.pop(-literal)
         except:
-            # print(self.literal_to_clause_dict[-literal])
-            # print(self.literal_occurence_count_dict[-literal])
             pass
 
         self.literal_to_clause_dict.pop(-literal)
@@ -325,15 +322,16 @@ def sat(sentence: Sentence):
 
 
 if __name__ == '__main__':
-    
+    avg = 0
     #cnf = load_dimacs(sys.argv[1])
-    
-    for i in range(100000):
-        cnf = load_dimacs("Homework Files-20200320/test.txt")
-        zac = time.time()
-        solution = sat(cnf)
-        kon = time.time()
-        print(kon-zac)
+    cnf = load_dimacs("Samples/Sample1.txt")
+    zac = time.time()
+    solution = sat(cnf)
+    kon = time.time()
+    #name = sys.argv[1].split('/')[-1].split('.')[0]
+    #write_solution(solution, sys.argv[2])
+    print("Rešitev: " + str(solution) + "\n" + "v času: " + str(kon - zac))
+    print(len(solution))
     #print("Rešitev: " + str(solution))
     #print(set(solution))
     #print("dolzina s set: " + len(set(solution)))

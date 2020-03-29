@@ -7,7 +7,9 @@ c fourth step: q (q unit)
 c fifth step: [] no clauses 
 p cnf 729 12024
 1 0 
+5 0
+2 0
 2 3 0
 3 -4 0 
-4 -1 0 
+4 -1 -2 0 
 -3 1 2 0
