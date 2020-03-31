@@ -51,5 +51,4 @@ If you would like to see the solution, the length of it and the time it took to 
 * **Blaž Dobravec**
 
 ## License
-
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
+This project is licensed under the MIT License - see the `LICENCE.md` file for details
