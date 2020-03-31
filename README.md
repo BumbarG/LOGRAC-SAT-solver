@@ -9,7 +9,7 @@ The only prerequisite that you need is Python 3.7 or higher and library `numpy`.
 
 If numpy is not installed, install it with pip
 ```
-pop install numpy
+pip install numpy
 ```
 
 ### Tests and generating new instances
